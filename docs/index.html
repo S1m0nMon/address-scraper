@@ -33,7 +33,7 @@
 
   async function fetchResult(fgnRegNo) {
     const res = await fetch(
-      `https://YOUR_USER.github.io/YOUR_REPO/results/${fgnRegNo}.json`
+      `https://S1m0nMon.github.io/address-scraper/results/${fgnRegNo}.json`
     );
     if (!res.ok) throw new Error('Result not found: ' + res.status);
     return await res.json();
