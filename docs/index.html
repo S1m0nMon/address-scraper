@@ -14,6 +14,8 @@
   <pre id="result"></pre>
 
   <script>
+    // build-time에 GH_TOKEN으로 치환될 자리 표시자
+    const GITHUB_TOKEN = '<<GH_TOKEN_PLACEHOLDER>>';
     async function triggerDispatch(fgnRegNo, regYmd) {
       const resp = await fetch(
         'https://api.github.com/repos/S1m0nMon/address-scraper/dispatches',
