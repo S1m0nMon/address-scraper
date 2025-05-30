@@ -1,0 +1,30 @@
+﻿name: Scrape Address
+
+on:
+  repository_dispatch:
+    types: [scrape-address]
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install deps
+        run: npm ci
+      - name: Run scraper
+        run: node scripts/scrape.js "${{ github.event.client_payload.fgnRegNo }}" "${{ github.event.client_payload.regYmd }}"
+      - name: Commit results
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "Add address for ${{ github.event.client_payload.fgnRegNo }}"
+          add: "results/${{ github.event.client_payload.fgnRegNo }}.json"
+          branch: gh-pages
