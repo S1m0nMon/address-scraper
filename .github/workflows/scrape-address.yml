@@ -1,7 +1,6 @@
 ﻿name: Scrape Address
 
 on:
-  workflow_dispatch:          # UI에서 직접 실행할 수 있도록 추가
   repository_dispatch:
     types: [scrape-address]
 
@@ -24,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-       # ─────────────────────────────────────────────────────────
+      # ─────────────────────────────────────────────────────────
       # Build-time token injection
       - name: Inject GH_TOKEN into index.html
         env:
