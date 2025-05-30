@@ -14,16 +14,35 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install deps
+
+      - name: Install dependencies
         run: npm ci
+
+      # ─────────────────────────────────────────────────────────
+      # Build-time token injection
+      - name: Inject GH_TOKEN into index.html
+        run: |
+          sed -i "s|<<GH_TOKEN_PLACEHOLDER>>|${{ secrets.GH_TOKEN }}|g" docs/index.html
+
+      - name: Commit injected index.html
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "ci: inject GH_TOKEN into index.html"
+          add: docs/index.html
+          branch: main
+      # ─────────────────────────────────────────────────────────
+
       - name: Run scraper
         run: node scripts/scrape.js "${{ github.event.client_payload.fgnRegNo }}" "${{ github.event.client_payload.regYmd }}"
+
       - name: Commit results
         uses: EndBug/add-and-commit@v9
         with:
+          message: "ci: add results for ${{ github.event.client_payload.fgnRegNo }}"
           add: "docs/results/${{ github.event.client_payload.fgnRegNo }}.json"
           branch: main
