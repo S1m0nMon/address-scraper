@@ -14,7 +14,50 @@
   <pre id="result"></pre>
 
   <script>
-    // TODO: 여기에 dispatch 호출 + 결과 fetch 스크립트를 붙여넣을 예정
-  </script>
+  async function triggerDispatch(fgnRegNo, regYmd) {
+    const resp = await fetch(
+      'https://api.github.com/repos/S1m0nMon/address-scraper/dispatches',
+      {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': 'token YOUR_GH_TOKEN'
+        },
+        body: JSON.stringify({
+          event_type: 'scrape-address',
+          client_payload: { fgnRegNo, regYmd }
+        })
+      }
+    );
+    if (!resp.ok) throw new Error('Dispatch failed: ' + resp.status);
+  }
+
+  async function fetchResult(fgnRegNo) {
+    const res = await fetch(
+      `https://YOUR_USER.github.io/YOUR_REPO/results/${fgnRegNo}.json`
+    );
+    if (!res.ok) throw new Error('Result not found: ' + res.status);
+    return await res.json();
+  }
+
+  document.getElementById('addrForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const fgn = e.target.fgnRegNo.value.trim();
+    const reg = e.target.regYmd.value.trim();
+    const out = document.getElementById('result');
+    out.textContent = '조회 중…';
+
+    try {
+      await triggerDispatch(fgn, reg);
+      // 워크플로우가 커밋할 시간을 잠시 줍니다.
+      await new Promise(r => setTimeout(r, 5000));
+      const data = await fetchResult(fgn);
+      out.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+      out.textContent = err.message;
+    }
+  });
+</script>
+
 </body>
 </html>
