@@ -1,6 +1,7 @@
 ﻿name: Scrape Address
 
 on:
+  workflow_dispatch:          # UI에서 직접 실행할 수 있도록 추가
   repository_dispatch:
     types: [scrape-address]
 
@@ -26,8 +27,10 @@ jobs:
       # ─────────────────────────────────────────────────────────
       # Build-time token injection
       - name: Inject GH_TOKEN into index.html
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          sed -i "s|<<GH_TOKEN_PLACEHOLDER>>|${{ secrets.GH_TOKEN }}|g" docs/index.html
+          sed -i "s|<<GH_TOKEN_PLACEHOLDER>>|${GH_TOKEN}|g" docs/index.html
 
       - name: Commit injected index.html
         uses: EndBug/add-and-commit@v9
@@ -38,7 +41,10 @@ jobs:
       # ─────────────────────────────────────────────────────────
 
       - name: Run scraper
-        run: node scripts/scrape.js "${{ github.event.client_payload.fgnRegNo }}" "${{ github.event.client_payload.regYmd }}"
+        run: |
+          node scripts/scrape.js \
+            "${{ github.event.client_payload.fgnRegNo }}" \
+            "${{ github.event.client_payload.regYmd }}"
 
       - name: Commit results
         uses: EndBug/add-and-commit@v9
