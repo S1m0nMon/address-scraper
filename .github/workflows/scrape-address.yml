@@ -37,7 +37,7 @@ jobs:
         with:
           message: "ci: inject GH_TOKEN into index.html"
           add: docs/index.html
-          branch: main
+          github_token: ${{ secrets.GH_TOKEN }}
       # ─────────────────────────────────────────────────────────
 
       - name: Run scraper
@@ -51,4 +51,4 @@ jobs:
         with:
           message: "ci: add results for ${{ github.event.client_payload.fgnRegNo }}"
           add: "docs/results/${{ github.event.client_payload.fgnRegNo }}.json"
-          branch: main
+          github_token: ${{ secrets.GH_TOKEN }}
