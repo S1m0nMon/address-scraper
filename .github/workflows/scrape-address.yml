@@ -25,6 +25,5 @@ jobs:
       - name: Commit results
         uses: EndBug/add-and-commit@v9
         with:
-          message: "Add address for ${{ github.event.client_payload.fgnRegNo }}"
-          add: "results/${{ github.event.client_payload.fgnRegNo }}.json"
-          branch: gh-pages
+          add: "docs/results/${{ github.event.client_payload.fgnRegNo }}.json"
+          branch: main
