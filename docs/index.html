@@ -1,63 +1,167 @@
 ﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8"/>
-  <title>주소 조회</title>
+  <meta charset="UTF-8" />
+  <title>주소 조회 (Material UI + React)</title>
+  <!-- Roboto 폰트 (Material UI 권장) -->
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+  />
+  <!-- Material Icons -->
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/icon?family=Material+Icons"
+  />
+  <!-- Material UI UMD + Emotion (개발용) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@mui/material@5.13.7/umd/material-ui.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@emotion/react@11.11.0/umd/emotion-react.umd.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@emotion/styled@11.11.0/umd/emotion-styled.umd.min.js" crossorigin></script>
+
+  <!-- Babel (브라우저에서 JSX 변환용) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* 페이지 전체 배경 및 기본 여백 제거 */
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f0f2f5;
+      font-family: "Roboto", sans-serif;
+    }
+    #root {
+      display: flex;
+      justify-content: center;
+      padding: 2rem;
+    }
+  </style>
 </head>
 <body>
-  <h1>법무부에 등록된 주소 조회</h1>
-  <form id="addrForm">
-    <input name="fgnRegNo" placeholder="외국인등록번호(13자리)" required>
-    <input name="regYmd"    placeholder="발급일자(YYYYMMDD)" required>
-    <button type="submit">조회</button>
-  </form>
-  <pre id="result"></pre>
+  <div id="root"></div>
 
-  <script>
-    // build-time에 GH_TOKEN으로 치환될 자리 표시자
-    const GITHUB_TOKEN = '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';
-    async function triggerDispatch(fgnRegNo, regYmd) {
-      const resp = await fetch(
-        'https://api.github.com/repos/S1m0nMon/address-scraper/dispatches',
-        {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/vnd.github.everest-preview+json',
-            'Authorization': 'token ' + GITHUB_TOKEN
-          },
-          body: JSON.stringify({
-            event_type: 'scrape-address',
-            client_payload: { fgnRegNo, regYmd }
-          })
+  <!-- React + Material UI 컴포넌트를 정의하는 부분 -->
+  <script type="text/babel">
+    const {
+      Button,
+      Container,
+      Paper,
+      TextField,
+      Typography,
+      Box,
+      CircularProgress,
+    } = MaterialUI;
+
+    function AddressLookup() {
+      const [fgnRegNo, setFgnRegNo] = React.useState("");
+      const [regYmd, setRegYmd] = React.useState("");
+      const [loading, setLoading] = React.useState(false);
+      const [result, setResult] = React.useState(null);
+      const [error, setError] = React.useState(null);
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setResult(null);
+        setError(null);
+
+        try {
+          const resp = await fetch("/api/scrape", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              fgnRegNo: fgnRegNo.trim(),
+              regYmd: regYmd.trim(),
+            }),
+          });
+          if (!resp.ok) throw new Error("서버 오류: " + resp.status);
+          const data = await resp.json();
+          setResult(data);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
         }
+      };
+
+      return (
+        <Container maxWidth="sm">
+          <Paper elevation={3} sx={{ p: 4, mt: 4, mb: 4 }}>
+            <Typography variant="h5" component="h1" gutterBottom>
+              법무부에 등록된 주소 조회
+            </Typography>
+
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              noValidate
+              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+            >
+              <TextField
+                label="외국인등록번호 (13자리)"
+                name="fgnRegNo"
+                value={fgnRegNo}
+                onChange={(e) => setFgnRegNo(e.target.value)}
+                required
+                inputProps={{ maxLength: 13 }}
+                helperText="예: 1234567890123"
+                variant="outlined"
+              />
+
+              <TextField
+                label="발급일자 (YYYYMMDD)"
+                name="regYmd"
+                value={regYmd}
+                onChange={(e) => setRegYmd(e.target.value)}
+                required
+                inputProps={{ maxLength: 8 }}
+                helperText="예: 20250101"
+                variant="outlined"
+              />
+
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading}
+                sx={{ mt: 2 }}
+              >
+                {loading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "조회"
+                )}
+              </Button>
+            </Box>
+
+            {error && (
+              <Typography color="error" sx={{ mt: 3 }}>
+                {error}
+              </Typography>
+            )}
+
+            {result && (
+              <Paper
+                elevation={1}
+                sx={{
+                  backgroundColor: "#fafafa",
+                  p: 2,
+                  mt: 3,
+                  whiteSpace: "pre-wrap",
+                  fontFamily: "monospace",
+                  fontSize: "0.9rem",
+                }}
+              >
+                {JSON.stringify(result, null, 2)}
+              </Paper>
+            )}
+          </Paper>
+        </Container>
       );
-      if (!resp.ok) {
-        throw new Error('Dispatch failed: ' + resp.status + ' ' + await resp.text());
-      }
     }
 
-    async function fetchResult(fgnRegNo) {
-      const res = await fetch(`./results/${fgnRegNo}.json`);
-      if (!res.ok) throw new Error('Result not found: ' + res.status);
-      return await res.json();
-    }
-
-    document.getElementById('addrForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const fgn = e.target.fgnRegNo.value.trim();
-      const reg = e.target.regYmd.value.trim();
-      const out = document.getElementById('result');
-      out.textContent = '조회 중…';
-
-      try {
-        await triggerDispatch(fgn, reg);
-        await new Promise(r => setTimeout(r, 5000));
-        const data = await fetchResult(fgn);
-        out.textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
-        out.textContent = err.message;
-      }
-    });
+    ReactDOM.createRoot(document.getElementById("root")).render(<AddressLookup />);
   </script>
 </body>
 </html>
